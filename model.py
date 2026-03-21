@@ -4,7 +4,7 @@ import os
 
 # [v] • prepare the data (images) and define defect classes,
 # [v] • propose and implement a preprocessing stage (e.g. normalisation, denoising, contrast enhancement),
-# • determine the regions relevant for analysis (e.g. segmentation of bristle tips) or features describing the defects,
+# [v] • determine the regions relevant for analysis (e.g. segmentation of bristle tips) or features describing the defects,
 # • select and train a classification/detection model (or build a rule-based detector using the features),
 # • evaluate the quality of the solution (e.g. accuracy, precision/recall, confusion matrix) and discuss its limitations
 
@@ -47,6 +47,27 @@ class ToothbrushDefectDetector:
     def __init__(self):
         self.train_images = []
         self.train_labels = []
+        # NEW: list of masks corresponding to segmented regions of interest (bristle tips)
+        self.train_masks = []
+
+    # NEW: Method implementing point 3 (determining regions for analysis)
+    def segment_bristles(self, preprocessed_image):
+        """
+        Segmentation based on edge detection.
+        Bristles generate a lot of edges (texture), while the plastic handle is smooth and will be ignored.
+        """
+        # 1. Canny Edge Detection
+        # Thresholds 40 and 120 are designed to capture the sharp edges of the bristles
+        edges = cv2.Canny(preprocessed_image, 40, 120)
+        
+        # 2. Dilation - merges individual bristle edges into solid clusters (blobs)
+        kernel_dilate = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        bristles_dilated = cv2.dilate(edges, kernel_dilate, iterations=1)
+        
+        # 3. Morphological Closing - fills small black holes inside the white bristle clusters
+        bristles_mask = cv2.morphologyEx(bristles_dilated, cv2.MORPH_CLOSE, kernel_dilate)
+
+        return bristles_mask
 
     def prepare_data(self):
         # Define classes
@@ -71,6 +92,10 @@ class ToothbrushDefectDetector:
                     # Normalisation: scale to 0-255 range
                     image_norm = cv2.normalize(image_opened, None, 0, 255, cv2.NORM_MINMAX)
 
+                    # Determining regions for analysis (segmentation)
+                    segmented_region = self.segment_bristles(image_norm)
+                    self.train_masks.append(segmented_region)
+
                     self.train_images.append(image_norm)
                     self.train_labels.append(classes['good'])
         
@@ -93,18 +118,33 @@ class ToothbrushDefectDetector:
                     # Normalisation: scale to 0-255 range
                     image_norm = cv2.normalize(image_opened, None, 0, 255, cv2.NORM_MINMAX)
                     
+                    # NEW: Determining regions for analysis (segmentation)
+                    segmented_region = self.segment_bristles(image_norm)
+                    self.train_masks.append(segmented_region)
+
                     self.train_images.append(image_norm)
                     self.train_labels.append(classes['defective'])
         
         # Convert to NumPy arrays
         self.train_images = np.array(self.train_images)
         self.train_labels = np.array(self.train_labels)
-        print(f"Prepared {len(self.train_images)} images with labels.")
+        self.train_masks = np.array(self.train_masks) # NEW: maskconversion to NumPy array
+        print(f"Prepared {len(self.train_images)} images with labels and segmented regions.")
         
         # go through all images to check the preprocessing results
         for i in range(len(self.train_images)):
-            cv2.imshow("Preprocessed Image", self.train_images[i])
-            cv2.waitKey(300)
+            #  NEW: Displaying preprocessed image next to its segmented mask 
+            combined_view = np.hstack((self.train_images[i], self.train_masks[i]))
+            combined_view_resized = cv2.resize(combined_view, (1024, 512)) 
+            cv2.imshow("Left: Preprocessed | Right: Segmented Region", combined_view_resized)
+            key = cv2.waitKey(300) & 0xFF 
+            
+            # NEW: If 'q' (ord('q')) OR 'Escape' (ASCII code 27) is pressed, break the loop
+            if key == ord('q') or key == 27:
+                print("Displaying images stopped.")
+                break
+
+        cv2.destroyAllWindows()
 
         # 90 - num of images, 1024x1024 - size of each image
         print(self.train_images.shape)
