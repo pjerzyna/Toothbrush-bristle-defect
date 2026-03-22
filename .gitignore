@@ -1,0 +1,16 @@
+# Środowisko wirtualne
+venv/
+env/
+
+# Cache Pythona
+__pycache__/
+*.pyc
+
+# Ignoruj wszystkie modele i wagi sieci
+*.pth
+
+# Folder z danymi (zdjęcia i maski)
+toothbrush/
+
+# Pliki systemowe
+.DS_Store

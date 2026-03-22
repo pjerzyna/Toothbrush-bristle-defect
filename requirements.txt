@@ -1,1 +1,6 @@
 numpy
+opencv-python
+torch
+torchvision
+scikit-learn
+matplotlib
