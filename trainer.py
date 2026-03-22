@@ -32,11 +32,11 @@ class ToothbrushDefectDetector:
                 img = preprocess_image(img)
                 empty_mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
 
-                patches_img, patches_mask = extract_patches(img, empty_mask, PATCH_SIZE)
+                patches_img, patches_mask = extract_patches(img, empty_mask, PATCH_SIZE, stride=256)
 
                 for p_img, p_mask in zip(patches_img, patches_mask):
-                    # Sample ~5% of healthy patches to teach the model "normal" background
-                    if np.random.random() < 0.05: 
+                    # Sample ~10% of healthy patches to teach the model "normal" background
+                    if np.random.random() < 0.1: 
                         self.train_images.append(p_img)
                         self.train_masks.append(p_mask)
 
@@ -59,7 +59,7 @@ class ToothbrushDefectDetector:
                 else:
                     mask = np.zeros_like(img)
 
-                patches_img, patches_mask = extract_patches(img, mask, PATCH_SIZE)
+                patches_img, patches_mask = extract_patches(img, mask, PATCH_SIZE, stride=64)
 
                 for p_img, p_mask in zip(patches_img, patches_mask):
                     if np.sum(p_mask) > 0: 

@@ -1,16 +1,17 @@
 # Środowisko wirtualne
 venv/
 env/
+venv_toothbrush/
 
 # Cache Pythona
 __pycache__/
 *.pyc
 
 # Ignoruj wszystkie modele i wagi sieci
-*.pth
+#*.pth
 
 # Folder z danymi (zdjęcia i maski)
-toothbrush/
+#toothbrush/
 
 # Pliki systemowe
 .DS_Store

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import cv2
 
-def extract_patches(img: np.ndarray, mask: np.ndarray, size: int = 256) -> tuple:
+def extract_patches(img: np.ndarray, mask: np.ndarray, size: int = 256, stride: int = 64) -> tuple:
     """
     Extracts non-overlapping square patches from an image and its corresponding mask.
     Discards any edge patches that do not match the exact specified size.
@@ -12,15 +12,13 @@ def extract_patches(img: np.ndarray, mask: np.ndarray, size: int = 256) -> tuple
 
     h, w = img.shape[:2]
 
-    for i in range(0, h, size):
-        for j in range(0, w, size):
+    for i in range(0, h - size + 1, stride):
+        for j in range(0, w - size + 1, stride):
             patch_img = img[i:i+size, j:j+size]
             patch_mask = mask[i:i+size, j:j+size]
 
-            # Append only if the patch perfectly matches the requested dimensions
-            if patch_img.shape == (size, size):
-                patches_img.append(patch_img)
-                patches_mask.append(patch_mask)
+            patches_img.append(patch_img)
+            patches_mask.append(patch_mask)
 
     return patches_img, patches_mask
 
