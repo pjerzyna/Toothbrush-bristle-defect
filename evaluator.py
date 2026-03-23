@@ -8,9 +8,8 @@ from config import PATH_TRAIN_GOOD, PATH_TRAIN_DEFECTIVE, PATH_GROUNDTRUTH_MASKS
 from model import UNet
 from utils import preprocess_image # Assuming preprocess was moved to utils.py
 
-# ================= Train again with threshold=0.3 =======================================================
 class ToothbrushModelEvaluator:
-    def __init__(self, model_path: str, threshold: float = 0.5, defect_pixel_threshold: int = 500):
+    def __init__(self, model_path: str, threshold: float = 0.25, defect_pixel_threshold: int = 500):
         """
         Initializes the evaluator with a trained U-Net model.
 
